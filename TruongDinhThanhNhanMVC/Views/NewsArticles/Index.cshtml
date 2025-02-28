@@ -1,0 +1,164 @@
+﻿@model IEnumerable<BusinessObjects.NewsArticle>
+@{
+    ViewData["Title"] = "Bảng tin";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+        <a asp-action="Create" class="btn btn-primary rounded-pill">
+            <i class="fas fa-plus me-2"></i>Tạo bài viết mới
+        </a>
+    </div>
+
+    <!-- Thanh tìm kiếm và lọc -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <form method="get" asp-action="Index" class="mb-3 d-flex align-items-center">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Search accounts..." value="@Context.Request.Query["search"]">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        <a asp-action="Index" class="btn btn-secondary">Reset</a>
+                    </div>
+                </form>
+
+                <form method="get" asp-action="Index" class="d-flex align-items-center">
+                    <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
+                    <input type="hidden" name="userId" value="@ViewData["UserId"]" />
+                    <select name="filter" class="form-select w-auto mx-2" onchange="this.form.submit()">
+                        <option value="">Select option</option>
+                        <option value="createdbyme" selected="@(Context.Request.Query["filter"] == "createdbyme" ? "selected" : null)">Create by me</option>
+                        <option value="publish" selected="@(Context.Request.Query["filter"] == "publish" ? "selected" : null)">Publish</option>
+                        <option value="private" selected="@(Context.Request.Query["filter"] == "private" ? "selected" : null)">Private</option>
+                    </select>
+                    @* <button type="submit" class="btn btn-primary">Sort</button> *@
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Danh sách bài viết dạng news feed -->
+    <div class="news-feed">
+        @foreach (var item in Model)
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                            @if (item.CreatedBy != null)
+                            {
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8NaLw_E0DZKZKzrsWD8dqpzgcGxzijWYROg&s" alt="Profile Image" class="img-fluid rounded-circle" style="width: 40px; height: 40px;" />
+                            }
+                            else
+                            {
+                                <i class="fas fa-user"></i>
+                            }
+                        </div>
+                        <div>
+                            <h5 class="mb-0">@item.NewsTitle</h5>
+                            <div class="small text-muted">
+                                <span>Create by: @item.CreatedBy?.AccountName</span> •
+                                <span>@item.CreatedDate.ToString()</span>
+                            </div>
+                            <span class="badge bg-primary">@item.Category?.CategoryName</span>
+                            <span class="badge @(item.NewsStatus == true ? ("bg-success") : "bg-secondary")">@(item.NewsStatus == true ? "Publish" : "Private")</span>
+                        </div>
+                        <div class="dropdown ms-auto">
+                            <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@item.NewsArticleId"><i class="fas fa-edit me-2 "></i>Edit</a></li>
+                                <li><a class="dropdown-item" asp-action="Details" asp-route-id="@item.NewsArticleId"><i class="fas fa-info-circle me-2"></i>Details</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" asp-action="Delete" asp-route-id="@item.NewsArticleId"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <p class="card-subtitle mb-3 fw-bold">@item.Headline</p>
+
+                    <p class="card-text" id="content-@item.NewsArticleId">
+                        @(item.NewsContent != null && item.NewsContent.Length > 200
+                            ? item.NewsContent.Substring(0, 200) + "..."
+                            : item.NewsContent)
+                    </p>
+
+                    @if (item.NewsContent != null && item.NewsContent.Length > 200)
+                    {
+                        <button class="btn btn-link p-0" onclick="toggleContent(@item.NewsArticleId)">
+                            Read more
+                        </button>
+
+                        <script>
+                            document.addEventListener("DOMContentLoaded", function () {
+                                var fullContent = `@Html.Raw(item.NewsContent.Replace("'", "\\'"))`;
+                                window["fullContent_" + @item.NewsArticleId] = fullContent;
+                            });
+
+                            function toggleContent(id) {
+                                var contentElement = document.getElementById("content-" + id);
+                                var fullContent = window["fullContent_" + id];
+
+                                if (contentElement.dataset.expanded === "true") {
+                                    contentElement.innerHTML = fullContent.substring(0, 200) + "...";
+                                    contentElement.dataset.expanded = "false";
+                                } else {
+                                    contentElement.innerHTML = fullContent;
+                                    contentElement.dataset.expanded = "true";
+                                }
+                            }
+                        </script>
+                    }
+
+                    @if (!string.IsNullOrEmpty(item.NewsSource))
+                    {
+                        <div class="small text-muted mb-3">
+                            <i class="fas fa-link me-1"></i> Nguồn: @item.NewsSource
+                        </div>
+                    }
+                </div>
+
+                <div class="card-footer bg-white p-3 d-flex justify-content-between">
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary me-2">
+                            <i class="far fa-thumbs-up me-1"></i> Like
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary me-2">
+                            <i class="far fa-comment me-1"></i> Comment
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-share me-1"></i> Share
+                        </button>
+                    </div>
+                    <div>
+                        @if (item.ModifiedDate.HasValue)
+                        {
+                            <small class="text-muted">Update: @item.ModifiedDate?.ToString("dd/MM/yyyy HH:mm")</small>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Nút tải thêm -->
+    <div class="text-center my-4">
+        <button class="btn btn-outline-primary rounded-pill px-4">
+            <i class="fas fa-sync-alt me-2"></i>Tải thêm bài viết
+        </button>
+    </div>
+</div>
+    <script>
+            // Cập nhật label trạng thái khi toggle switch
+            $("#NewsStatus").change(function() {
+                if($(this).is(":checked")) {
+                    $(this).next().html('<span class="text-success">Công khai</span> / <span class="text-secondary">Riêng tư</span>');
+                } else {
+                    $(this).next().html('<span class="text-secondary">Công khai</span> / <span class="text-success">Riêng tư</span>');
+                }
+            }
+    </script>

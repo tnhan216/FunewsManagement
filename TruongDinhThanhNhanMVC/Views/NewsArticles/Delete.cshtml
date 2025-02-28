@@ -1,0 +1,129 @@
+﻿@model BusinessObjects.NewsArticle
+@{
+    ViewData["Title"] = "Xóa bài viết";
+}
+
+<div class="container mt-4">
+    <div class="card shadow border-danger">
+        <div class="card-header bg-danger text-white py-3">
+            <h4 class="mb-0">
+                <i class="fas fa-trash-alt me-2"></i>@ViewData["Title"]
+            </h4>
+        </div>
+        <div class="card-body p-4">
+            <!-- Cảnh báo xác nhận -->
+            <div class="alert alert-warning mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fs-3 me-3"></i>
+                    <div>
+                        <h5 class="alert-heading">Bạn có chắc chắn muốn xóa bài viết này?</h5>
+                        <p class="mb-0">Hành động này không thể khôi phục lại. Tất cả dữ liệu liên quan đến bài viết sẽ bị xóa vĩnh viễn.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thông tin bài viết -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Thông tin bài viết cần xóa</h5>
+                </div>
+                <div class="card-body">
+                    <h4 class="text-danger mb-2">@Model.NewsTitle</h4>
+                    <p class="text-muted mb-3">@Model.Headline</p>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <div class="text-muted me-2 fw-medium">Danh mục:</div>
+                                <div>@Model.Category.CategoryDesciption</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <div class="text-muted me-2 fw-medium">Trạng thái:</div>
+                                <div>
+                                    @if (Model.NewsStatus)
+                                    {
+                                        <span class="text-success">Công khai</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-secondary">Riêng tư</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <div class="text-muted me-2 fw-medium">Tạo bởi:</div>
+                                <div>@(@ViewData["UserId"] ?? Model.CreatedBy?.AccountId)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <div class="text-muted me-2 fw-medium">Ngày tạo:</div>
+                                <div>@Model.CreatedDate.ToString()</div>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Model.NewsSource))
+                        {
+                            <div class="col-md-6">
+                                <div class="d-flex">
+                                    <div class="text-muted me-2 fw-medium">Nguồn tin:</div>
+                                    <div>@Model.NewsSource</div>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.UpdatedById.ToString()))
+                        {
+                            <div class="col-md-6">
+                                <div class="d-flex">
+                                    <div class="text-muted me-2 fw-medium">Cập nhật bởi:</div>
+                                    <div>@Model.UpdatedById</div>
+                                </div>
+                            </div>
+                        }
+
+                        @if (Model.ModifiedDate.HasValue)
+                        {
+                            <div class="col-md-6">
+                                <div class="d-flex">
+                                    <div class="text-muted me-2 fw-medium">Ngày cập nhật:</div>
+                                    <div>@Model.ModifiedDate.Value.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Hiển thị một phần nội dung -->
+                    <div class="mt-3">
+                        <div class="text-muted fw-medium mb-2">Nội dung (trích đoạn):</div>
+                        <div class="border-start border-3 border-secondary ps-3 py-2 text-truncate" style="max-height: 100px; overflow: hidden;">
+                            @Html.Raw(Model.NewsContent.Replace(Environment.NewLine, "<br />").Substring(0, Math.Min(Model.NewsContent.Length, 300)))
+                            @if (Model.NewsContent.Length > 300)
+                            {
+                                <span>...</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form xác nhận xóa -->
+            <form asp-action="Delete" class="mt-4">
+                <input type="hidden" asp-for="NewsArticleId" />
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn thực sự muốn xóa bài viết này?');">
+                        <i class="fas fa-trash-alt me-2"></i>Xác nhận xóa
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

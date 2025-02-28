@@ -1,0 +1,145 @@
+﻿@model BusinessObjects.NewsArticle
+@{
+    ViewData["Title"] = "Tạo bài viết mới";
+
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0">
+                <i class="fas fa-newspaper me-2"></i>@ViewData["Title"]
+            </h4>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Create" id="createNewsForm">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <!-- User Profile Section -->
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8NaLw_E0DZKZKzrsWD8dqpzgcGxzijWYROg&s" alt="Profile Image" class="img-fluid rounded-circle" style="width: 40px; height: 40px;" />
+                    </div>
+                    <div>
+                        <span class=" border-0 fw-bold">@ViewData["Username"]</span>
+                    </div>
+                </div>
+
+                <!-- Tiêu đề bài viết -->
+                <div class="form-floating mb-3">
+                    <input asp-for="NewsTitle" class="form-control form-control-lg" placeholder="Tiêu đề bài viết" />
+                    <label asp-for="NewsTitle">Tiêu đề bài viết</label>
+                    <span asp-validation-for="NewsTitle" class="text-danger"></span>
+                </div>
+
+                <!-- Headline -->
+                <div class="form-floating mb-3">
+                    <input asp-for="Headline" class="form-control" placeholder="Mô tả ngắn gọn" />
+                    <label asp-for="Headline">Mô tả ngắn gọn</label>
+                    <span asp-validation-for="Headline" class="text-danger"></span>
+                </div>
+
+                <!-- Nội dung bài viết -->
+                <div class="form-floating mb-3">
+                    <textarea asp-for="NewsContent" class="form-control" style="height: 200px;" placeholder="Bạn đang nghĩ gì?"></textarea>
+                    <label asp-for="NewsContent">Nội dung bài viết</label>
+                    <span asp-validation-for="NewsContent" class="text-danger"></span>
+                </div>
+
+                <div class="row mb-3">
+                    <!-- Nguồn tin -->
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="NewsSource" class="form-control" placeholder="Nguồn tin" />
+                            <label asp-for="NewsSource">Nguồn tin</label>
+                            <span asp-validation-for="NewsSource" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Danh mục -->
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryId">
+                                <option selected disabled>Chọn danh mục</option>
+                            </select>
+                            <label asp-for="CategoryId">Danh mục</label>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thêm ảnh/video/tệp đính kèm -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div class="text-muted">Thêm vào bài viết của bạn</div>
+                            <div>
+                                <button type="button" class="btn btn-light btn-sm rounded-circle" title="Thêm ảnh">
+                                    <i class="fas fa-image text-success"></i>
+                                </button>
+                                <button type="button" class="btn btn-light btn-sm rounded-circle" title="Thêm video">
+                                    <i class="fas fa-video text-primary"></i>
+                                </button>
+                                <button type="button" class="btn btn-light btn-sm rounded-circle" title="Thêm tệp">
+                                    <i class="fas fa-paperclip text-warning"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cài đặt trạng thái - Sửa chỗ này -->
+                <div class="card mb-3">
+                    <div class="card-body p-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <label class="form-label mb-0">Trạng thái:</label>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-check form-switch">
+                                    <!-- Thay đổi từ asp-for sang name và id -->
+                                    <input class="form-check-input" type="checkbox" name="NewsStatus" id="NewsStatus" value="true" checked>
+                                    <input type="hidden" name="NewsStatus" value="false" />
+                                    <label class="form-check-label" for="NewsStatus">
+                                        <span class="text-success">Công khai</span> / <span class="text-secondary">Riêng tư</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ngày tạo - tự động set tại controller -->
+                <input type="hidden" asp-for="CreatedDate" value="@DateTime.Now" />
+
+                <!-- Nút đăng bài -->
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-paper-plane me-2"></i>Đăng bài
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            // Cập nhật label trạng thái khi toggle switch
+            $("#NewsStatus").change(function() {
+                if($(this).is(":checked")) {
+                    $(this).next().next().html('<span class="text-success">Publish</span> / <span class="text-secondary">Private</span>');
+                } else {
+                    $(this).next().next().html('<span class="text-secondary">Publish</span> / <span class="text-success">Private</span>');
+                }
+            });
+        });
+    </script>
+}

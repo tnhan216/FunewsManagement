@@ -1,0 +1,60 @@
+﻿@model BusinessObjects.SystemAccount
+
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0">
+                <i class="fas fa-user-circle me-2"></i>@ViewData["Title"]
+            </h4>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="UpdateProfile" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="AccountId" />
+                <!-- Name -->
+                <div class="form-floating mb-3">
+                    <input asp-for="AccountName" class="form-control" placeholder="Họ và tên" />
+                    <label asp-for="AccountName">Name</label>
+                    <span asp-validation-for="AccountName" class="text-danger"></span>
+                </div>
+
+                <!-- Email -->
+                <div class="form-floating mb-3">
+                    <input asp-for="AccountEmail" class="form-control" placeholder="AccountEmail"  />
+                    <label asp-for="AccountEmail"> AccountEmail </label>
+                    <span asp-validation-for="AccountEmail" class="text-danger"></span>
+
+                </div>
+
+                <!-- Password -->
+                <div class="form-floating mb-3">
+                    <input asp-for="AccountPassword" type="" class="form-control" placeholder="AccountPassword" />
+                    <label asp-for="AccountPassword">AccountPassword</label>
+                    <span asp-validation-for="AccountPassword" class="text-danger"></span>
+                </div>
+
+                <!-- Role -->
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" value="@(Model.AccountRole == 1 ? "Lecture" : Model.AccountRole == 2 ? "Staff" : "Admin")" readonly />
+                    <label>AccountRole</label>
+                </div>
+
+
+                <!-- Nút cập nhật -->
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save me-2"></i>Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

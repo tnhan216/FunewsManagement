@@ -1,0 +1,108 @@
+﻿@model BusinessObjects.NewsArticle
+@{
+    ViewData["Title"] = "Chi tiết bài viết";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0">
+                <i class="fas fa-newspaper me-2"></i>@ViewData["Title"]
+            </h4>
+        </div>
+        <div class="card-body p-4">
+            <!-- Thông tin cơ bản bài viết -->
+            <div class="mb-4">
+                <h2 class="mb-2">@Model.NewsTitle</h2>
+                <p class="lead text-muted mb-3">@Model.Headline</p>
+
+                <!-- Thông tin người tạo và ngày tạo -->
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8NaLw_E0DZKZKzrsWD8dqpzgcGxzijWYROg&s" alt="Profile Image" class="img-fluid rounded-circle" style="width: 40px; height: 40px;" />
+                    </div>
+                    <div>
+                        <div class="fw-bold">@(Model.CreatedBy?.AccountName)</div>
+                        <div class="text-muted small">
+                            <i class="fas fa-clock me-1"></i>@Model.CreatedDate.ToString()
+                            @if (Model.ModifiedDate.HasValue)
+                            {
+                                <span class="ms-2">
+                                    <i class="fas fa-edit me-1"></i>Update: @Model.ModifiedDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danh mục và trạng thái -->
+                <div class="mb-3">
+                    <span class="badge bg-primary me-2">
+                        <i class="fas fa-folder me-1"></i>@Model.Category.CategoryName
+                    </span>
+                    @if (Model.NewsStatus)
+                    {
+                        <span class="badge bg-success">
+                            <i class="fas fa-globe me-1"></i>Publish
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-lock me-1"></i>Private
+                        </span>
+                    }
+                </div>
+            </div>
+
+            <!-- Nội dung bài viết -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="content-wrapper">
+                        @Html.Raw(Model.NewsContent.Replace(Environment.NewLine, "<br />"))
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thông tin bổ sung -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">More detail</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        @if (!string.IsNullOrEmpty(Model.NewsSource))
+                        {
+                            <div class="col-md-6">
+                                <div class="d-flex">
+                                    <div class="text-muted me-2">Nguồn tin:</div>
+                                    <div class="fw-medium">@Model.NewsSource</div>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.UpdatedById.ToString()))
+                        {
+                            <div class="col-md-6">
+                                <div class="d-flex">
+                                    <div class="text-muted me-2">Update by:</div>
+                                    <div class="fw-medium">@Model.UpdatedBy?.AccountName</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nút hành động -->
+            <div class="d-flex gap-2 mt-4">
+                <a asp-action="Edit" asp-route-id="@Model?.NewsArticleId" class="btn btn-primary">
+                    <i class="fas fa-edit me-2"></i>Edit
+                </a>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to list
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
