@@ -50,7 +50,7 @@ namespace DataAccessObjects
                 _context.SaveChanges();
             }
         }
-            public List<NewsArticle> SearchNewsArticles(string? query, string? filter, int? userId)
+        public List<NewsArticle> SearchNewsArticlesbyStaff(string? query, string? filter, int? userId)
         {
             var newsArticles = _context.NewsArticles
                 .Include(n => n.Category)
@@ -62,7 +62,52 @@ namespace DataAccessObjects
             {
                 newsArticles = newsArticles.Where(n => n.NewsTitle.Contains(query) ||
                                                        n.Headline.Contains(query) ||
-                                                       n.NewsContent.Contains(query));
+                                                       n.NewsContent.Contains(query) ||
+                                                       n.Tags.Any(t => t.TagName.Contains(query)));
+            }
+
+            if (!string.IsNullOrEmpty(filter))
+            {
+                switch (filter.ToLower())
+                {
+                    case "createdbyme":
+                        newsArticles = newsArticles.Where(n => n.CreatedById == userId);
+                        break;
+                    case "publish":
+                        newsArticles = newsArticles.Where(n => n.NewsStatus == true && n.CreatedById == userId);
+                        break;
+                    case "private":
+                        newsArticles = newsArticles.Where(n => n.NewsStatus == false && n.CreatedById == userId);
+                        break;
+                    default:
+                        // Nếu không có filter, chỉ hiển thị bài viết được publish
+                        newsArticles = newsArticles.Where(n => n.NewsStatus == true);
+                        break;
+                }
+            }
+            else
+            {
+                // Nếu không có filter, chỉ hiển thị bài viết được publish
+                newsArticles = newsArticles.Where(n => n.NewsStatus == true);
+            }
+
+            return newsArticles.ToList();
+        }
+
+        public List<NewsArticle> SearchNewsArticlesbyAdmin(string? query, string? filter, int? userId)
+        {
+            var newsArticles = _context.NewsArticles
+                .Include(n => n.Category)
+                .Include(n => n.CreatedBy)
+                .Include(n => n.Tags)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(query))
+            {
+                newsArticles = newsArticles.Where(n => n.NewsTitle.Contains(query) ||
+                                                       n.Headline.Contains(query) ||
+                                                       n.NewsContent.Contains(query) ||
+                                                       n.Tags.ToString().Contains(query));
             }
 
             if (!string.IsNullOrEmpty(filter))
@@ -80,6 +125,7 @@ namespace DataAccessObjects
                         break;
                 }
             }
+
 
             return newsArticles.ToList();
         }

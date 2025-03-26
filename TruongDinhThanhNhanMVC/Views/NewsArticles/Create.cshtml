@@ -68,26 +68,11 @@
                     </div>
                 </div>
 
-                <!-- Thêm ảnh/video/tệp đính kèm -->
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div class="text-muted">Thêm vào bài viết của bạn</div>
-                            <div>
-                                <button type="button" class="btn btn-light btn-sm rounded-circle" title="Thêm ảnh">
-                                    <i class="fas fa-image text-success"></i>
-                                </button>
-                                <button type="button" class="btn btn-light btn-sm rounded-circle" title="Thêm video">
-                                    <i class="fas fa-video text-primary"></i>
-                                </button>
-                                <button type="button" class="btn btn-light btn-sm rounded-circle" title="Thêm tệp">
-                                    <i class="fas fa-paperclip text-warning"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+                <label>Tags</label>
+                @foreach (var tag in ViewBag.Tags)
+                {
+                    <input type="checkbox" name="selectedTags" value="@tag.TagId" /> @tag.TagName
+                }
                 <!-- Cài đặt trạng thái - Sửa chỗ này -->
                 <div class="card mb-3">
                     <div class="card-body p-3">

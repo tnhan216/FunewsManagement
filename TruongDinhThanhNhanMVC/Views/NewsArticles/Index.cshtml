@@ -1,6 +1,7 @@
 ﻿@model IEnumerable<BusinessObjects.NewsArticle>
 @{
     ViewData["Title"] = "Bảng tin";
+
 }
 
 <div class="container mt-4">
@@ -23,17 +24,31 @@
                     </div>
                 </form>
 
-                <form method="get" asp-action="Index" class="d-flex align-items-center">
-                    <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
-                    <input type="hidden" name="userId" value="@ViewData["UserId"]" />
-                    <select name="filter" class="form-select w-auto mx-2" onchange="this.form.submit()">
-                        <option value="">Select option</option>
-                        <option value="createdbyme" selected="@(Context.Request.Query["filter"] == "createdbyme" ? "selected" : null)">Create by me</option>
-                        <option value="publish" selected="@(Context.Request.Query["filter"] == "publish" ? "selected" : null)">Publish</option>
-                        <option value="private" selected="@(Context.Request.Query["filter"] == "private" ? "selected" : null)">Private</option>
-                    </select>
-                    @* <button type="submit" class="btn btn-primary">Sort</button> *@
-                </form>
+                @if (ViewData["UserId"] != null && (int)ViewData["UserId"] == 9999){
+                    <form method="get" asp-action="Index" class="d-flex align-items-center">
+                        <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
+                        <input type="hidden" name="userId" value="@ViewData["UserId"]" />
+                        <select name="filter" class="form-select w-auto mx-2" onchange="this.form.submit()">
+                            <option value="">Home</option>
+                            <option value="createdbyme" selected="@(Context.Request.Query["filter"] == "createdbyme" ? "selected" : null)">Create by me</option>
+                            <option value="publish" selected="@(Context.Request.Query["filter"] == "publish" ? "selected" : null)">Publish</option>
+                            <option value="private" selected="@(Context.Request.Query["filter"] == "private" ? "selected" : null)">Private</option>
+                        </select>
+                        @* <button type="submit" class="btn btn-primary">Sort</button> *@
+                    </form>
+                }else{
+                    <form method="get" asp-action="Index" class="d-flex align-items-center">
+                        <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
+                        <input type="hidden" name="userId" value="@ViewData["UserId"]" />
+                        <select name="filter" class="form-select w-auto mx-2" onchange="this.form.submit()">
+                            <option value="">Home</option>
+                            <option value="createdbyme" selected="@(Context.Request.Query["filter"] == "createdbyme" ? "selected" : null)">All my posts</option>
+                            <option value="publish" selected="@(Context.Request.Query["filter"] == "publish" ? "selected" : null)">Posted</option>
+                            <option value="private" selected="@(Context.Request.Query["filter"] == "private" ? "selected" : null)">Pending post</option>
+                        </select>
+                        @* <button type="submit" class="btn btn-primary">Sort</button> *@
+                    </form>
+                }
             </div>
         </div>
     </div>
@@ -63,8 +78,18 @@
                                 <span>@item.CreatedDate.ToString()</span>
                             </div>
                             <span class="badge bg-primary">@item.Category?.CategoryName</span>
-                            <span class="badge @(item.NewsStatus == true ? ("bg-success") : "bg-secondary")">@(item.NewsStatus == true ? "Publish" : "Private")</span>
+                            <span class="badge @(item.NewsStatus == true ? ("bg-success") : "bg-danger")">@(item.NewsStatus == true ? "Publish" : "Private")</span>
+                            @if (item.Tags != null && item.Tags.Any())
+                            {
+                                <div class="mt-2">
+                                    @foreach (var tag in item.Tags)
+                                    {
+                                        <span class="badge bg-secondary  me-1">#@tag.TagName</span>
+                                    }
+                                </div>
+                            }
                         </div>
+                        
                         <div class="dropdown ms-auto">
                             <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-ellipsis-v"></i>
@@ -74,6 +99,24 @@
                                 <li><a class="dropdown-item" asp-action="Details" asp-route-id="@item.NewsArticleId"><i class="fas fa-info-circle me-2"></i>Details</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" asp-action="Delete" asp-route-id="@item.NewsArticleId"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                                @if (ViewData["UserId"] != null && (int)ViewData["UserId"] == 9999)
+                                {
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form method="post" asp-action="Approve" asp-route-id="@item.NewsArticleId">
+                                            <button type="submit" class="dropdown-item text-success">
+                                                <i class="fas fa-check-circle me-2"></i>Accept
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li>
+                                        <form method="post" asp-action="Reject" asp-route-id="@item.NewsArticleId">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="fas fa-times-circle me-2"></i>Reject
+                                            </button>
+                                        </form>
+                                    </li>
+                                }
                             </ul>
                         </div>
                     </div>
@@ -152,13 +195,44 @@
         </button>
     </div>
 </div>
-    <script>
-            // Cập nhật label trạng thái khi toggle switch
-            $("#NewsStatus").change(function() {
+<script>
+    $("#NewsStatus").change(function() {
                 if($(this).is(":checked")) {
                     $(this).next().html('<span class="text-success">Công khai</span> / <span class="text-secondary">Riêng tư</span>');
-                } else {
-                    $(this).next().html('<span class="text-secondary">Công khai</span> / <span class="text-success">Riêng tư</span>');
-                }
+                 } 
+                 // else {
+                //     $(this).next().html('<span class="text-secondary">Công khai</span> / <span class="text-success">Riêng tư</span>');
+                // }
             }
-    </script>
+    function approvePost(newsId) {
+        if (confirm("Bạn có chắc muốn duyệt bài viết này?")) {
+            fetch(`/News/Approve/${newsId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            }).then(response => {
+                if (response.ok) {
+                    alert("Bài viết đã được duyệt!");
+                    location.reload();
+                } else {
+                    alert("Có lỗi xảy ra!");
+                }
+            });
+        }
+    }
+
+    function rejectPost(newsId) {
+        if (confirm("Bạn có chắc muốn từ chối bài viết này?")) {
+            fetch(`/News/Reject/${newsId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            }).then(response => {
+                if (response.ok) {
+                    alert("Bài viết đã bị từ chối!");
+                    location.reload();
+                } else {
+                    alert("Có lỗi xảy ra!");
+                }
+            });
+        }
+    }
+</script>

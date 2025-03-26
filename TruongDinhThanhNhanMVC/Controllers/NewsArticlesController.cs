@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using BusinessObjects;
 using Repositories;
 using System.Security.Claims;
+using NuGet.Packaging;
 
 namespace TruongDinhThanhNhanMVC.Controllers
 {
@@ -25,13 +26,21 @@ namespace TruongDinhThanhNhanMVC.Controllers
         // GET: NewsArticles
         public async Task<IActionResult> Index(string? search, string? filter,int? userId)
         {
+            int? Id= HttpContext.Session.GetInt32("UserId");
             ViewData["Username"] = HttpContext.Session.GetString("Username");
             ViewData["UserId"] = HttpContext.Session.GetInt32("UserId");
-            if (_newArt.SearchNewsArticles(search,filter, userId) != null)
+            if(Id!= null && Id == 9999)
             {
-                return View(_newArt.SearchNewsArticles(search, filter, userId));
+                if (_newArt.SearchNewsArticlesbyAdmin(search, filter, userId) != null)
+                {
+                    return View(_newArt.SearchNewsArticlesbyAdmin(search, filter, userId));
+                }
             }
-            var newArt= _newArt.GetAllNewsArticles();
+            if (_newArt.SearchNewsArticlesbyStaff(search, filter, userId) != null)
+            {
+                return View(_newArt.SearchNewsArticlesbyStaff(search, filter, userId));
+            }
+            var newArt= _newArt.GetAllNewsArticles().Where(n=>n.NewsStatus==true);
             return View(newArt);
         }
 
@@ -55,14 +64,15 @@ namespace TruongDinhThanhNhanMVC.Controllers
         // GET: NewsArticles/Create
         public IActionResult Create()
         {
-            //int? userId = (int)HttpContext.Session.GetInt32("UserId");
-            //if (userId == null)
-            //{
-            //    return RedirectToAction("Login", "Login");
-            //}
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Login");
+            }
             ViewData["UserId"] = HttpContext.Session.GetString("UserId");
             ViewData["Username"] = HttpContext.Session.GetString("Username");
             ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName");
+            ViewBag.Tags = _context.Tags.ToList();
             return View();
         }
 
@@ -71,7 +81,7 @@ namespace TruongDinhThanhNhanMVC.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(NewsArticle newsArticle)
+        public async Task<IActionResult> Create(NewsArticle newsArticle, int[] selectedTags)
         {
             int createby = (int)HttpContext.Session.GetInt32("UserId");
             
@@ -93,20 +103,17 @@ namespace TruongDinhThanhNhanMVC.Controllers
             newsArticle.CreatedDate = DateTime.Now;
             newsArticle.CreatedById = (short)Convert.ToInt32(createby);
 
-            
-                _context.Add(newsArticle);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            
+            newsArticle.Tags = _context.Tags.Where(t => selectedTags.Contains(t.TagId)).ToList();
 
-            //ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryDesciption", newsArticle.CategoryId);
-            //ViewData["CreatedById"] = new SelectList(_context.SystemAccounts, "AccountId", "AccountId", newsArticle.CreatedById);
-            //ViewData["Tags"] = new SelectList(_context.Tags, "TagId", "TagName");
-            //return View(newsArticle);
+            _context.Add(newsArticle);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+
         }
 
 
         // GET: NewsArticles/Edit/5
+        [HttpGet]
         public async Task<IActionResult> Edit(string id)
         {
             if (id == null)
@@ -119,7 +126,7 @@ namespace TruongDinhThanhNhanMVC.Controllers
             {
                 return NotFound();
             }
-
+            ViewBag.Tags = _context.Tags.ToList();
             ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName", newsArticle.CategoryId);
             ViewData["Username"] = HttpContext.Session.GetString("Username");
             ViewData["UserId"] = HttpContext.Session.GetInt32("UserId");
@@ -128,7 +135,7 @@ namespace TruongDinhThanhNhanMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("NewsArticleId,NewsTitle,Headline,CreatedDate,NewsContent,NewsSource,CategoryId,NewsStatus,CreatedById,UpdatedById,ModifiedDate")] NewsArticle newsArticle)
+        public async Task<IActionResult> Edit(string id, [Bind("NewsArticleId,NewsTitle,Headline,CreatedDate,NewsContent,NewsSource,CategoryId,NewsStatus,CreatedById,UpdatedById,ModifiedDate")] NewsArticle newsArticle, int[] selectedTags)
         {
 
             if (id != newsArticle.NewsArticleId)
@@ -140,12 +147,36 @@ namespace TruongDinhThanhNhanMVC.Controllers
             {
                 try
                 {
-                    int userId = (int)HttpContext.Session.GetInt32("UserId");
-                    // Cập nhật thông tin bổ sung
-                    newsArticle.ModifiedDate = DateTime.Now;
-                    newsArticle.UpdatedById = (short)userId;
+                    // Lấy bài viết gốc từ DB để cập nhật
+                    var existingArticle = await _context.NewsArticles
+                        .Include(n => n.Tags) // Load danh sách Tags cũ
+                        .FirstOrDefaultAsync(n => n.NewsArticleId == newsArticle.NewsArticleId);
 
-                     _newArt.UpdateNewsArticle(newsArticle);
+                    if (existingArticle == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Cập nhật thông tin từ form vào bản ghi gốc
+                    existingArticle.NewsTitle = newsArticle.NewsTitle;
+                    existingArticle.Headline = newsArticle.Headline;
+                    existingArticle.NewsContent = newsArticle.NewsContent;
+                    existingArticle.NewsSource = newsArticle.NewsSource;
+                    existingArticle.CategoryId = newsArticle.CategoryId;
+                    existingArticle.NewsStatus = newsArticle.NewsStatus;
+                    existingArticle.ModifiedDate = DateTime.Now;
+                    existingArticle.UpdatedById = (short)HttpContext.Session.GetInt32("UserId");
+
+                    // Xóa toàn bộ tag cũ
+                    existingArticle.Tags.Clear();
+                    await _context.SaveChangesAsync(); // Lưu ngay để tránh lỗi khóa chính
+
+                    // Thêm lại tag mới
+                    var tagsToAdd = await _context.Tags.Where(t => selectedTags.Contains(t.TagId)).ToListAsync();
+                    existingArticle.Tags.AddRange(tagsToAdd);
+
+                    // Lưu thay đổi vào DB
+                    await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
@@ -202,6 +233,11 @@ namespace TruongDinhThanhNhanMVC.Controllers
             var newsArticle = _newArt.GetNewsArticleById(id);
             if (newsArticle != null)
             {
+                var existingArticle = await _context.NewsArticles
+                        .Include(n => n.Tags) // Load danh sách Tags cũ
+                        .FirstOrDefaultAsync(n => n.NewsArticleId == newsArticle.NewsArticleId);
+                existingArticle.Tags.Clear();
+                await _context.SaveChangesAsync(); // Lưu ngay để tránh lỗi khóa chính
                 _newArt.DeleteNewsArticle(id);
             }
             return RedirectToAction(nameof(Index));
@@ -211,5 +247,33 @@ namespace TruongDinhThanhNhanMVC.Controllers
         {
             return _context.NewsArticles.Any(e => e.NewsArticleId == id);
         }
+        [HttpPost]
+        public IActionResult Approve(string id)
+        {
+            var article = _newArt.GetNewsArticleById(id);
+            if (article == null)
+            {
+                return NotFound();
+            }
+
+            article.NewsStatus = true; 
+            _newArt.UpdateNewsArticle(article);
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public IActionResult Reject(string id)
+        {
+            var article = _newArt.GetNewsArticleById(id);
+            if (article == null)
+            {
+                return NotFound();
+            }
+
+            article.NewsStatus = false; 
+            _newArt.UpdateNewsArticle(article);
+            return RedirectToAction(nameof(Index));
+        }
+
     }
 }

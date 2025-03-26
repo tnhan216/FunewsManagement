@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35728.132 d17.12
+VisualStudioVersion = 17.12.35728.132
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BusinessObjects", "BusinessObjects\BusinessObjects.csproj", "{11723DB7-0A59-4B81-B64E-402C9672F5D8}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repositories", "Repositories\Repositories.csproj", "{4AE74DC7-2AD3-4CF8-8232-DF29397AC912}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TruongDinhThanhNhanMVC", "TruongDinhThanhNhanMVC\TruongDinhThanhNhanMVC.csproj", "{3112FC0F-117F-4CDA-BCF4-EC4338ADA81A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TruongDinhThanhNhan_SE17D04_A02", "TruongDinhThanhNhan_SE17D04_A02\TruongDinhThanhNhan_SE17D04_A02.csproj", "{E7ABEB02-CE67-40F1-98DD-285E02CE0938}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,8 +35,15 @@ Global
 		{3112FC0F-117F-4CDA-BCF4-EC4338ADA81A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3112FC0F-117F-4CDA-BCF4-EC4338ADA81A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3112FC0F-117F-4CDA-BCF4-EC4338ADA81A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7ABEB02-CE67-40F1-98DD-285E02CE0938}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7ABEB02-CE67-40F1-98DD-285E02CE0938}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7ABEB02-CE67-40F1-98DD-285E02CE0938}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7ABEB02-CE67-40F1-98DD-285E02CE0938}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F4CB8DBB-E637-4D2A-A80F-CFBBCCFCDA1C}
 	EndGlobalSection
 EndGlobal

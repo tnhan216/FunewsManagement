@@ -1,0 +1,57 @@
+﻿@model List<BusinessObjects.NewsArticle>
+
+@{
+    ViewData["Title"] = "Statistical";
+}
+
+<h1>Statistical Report</h1>
+
+<!-- Form lọc bài viết theo ngày -->
+<form method="get" asp-action="Statictical">
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Start Date:</label>
+            <input type="date" name="startDate" class="form-control"
+                   value="@ViewData["StartDate"]?.ToString()">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">End Date:</label>
+            <input type="date" name="endDate" class="form-control"
+                   value="@ViewData["EndDate"]?.ToString()">
+        </div>
+        <div class="col-md-4 align-self-end">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </div>
+</form>
+
+@if (Model != null && Model.Any())
+{
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Title</th>
+                <th>Created Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var article in Model)
+            {
+                <tr>
+                    <td>@article.NewsTitle</td>
+                    <td>@article.CreatedDate.ToString()</td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@article.NewsArticleId" class="btn btn-info btn-sm">View</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-warning" role="alert">
+        No articles found in this date range.
+    </div>
+}

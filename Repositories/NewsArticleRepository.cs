@@ -22,6 +22,7 @@ namespace Repositories
         public void UpdateNewsArticle(NewsArticle newsArticle) => _dao.UpdateNewsArticle(newsArticle);
 
         public void DeleteNewsArticle(string id) => _dao.DeleteNewsArticle(id);
-        public List<NewsArticle> SearchNewsArticles(string? query, string? filter, int? userId) => _dao.SearchNewsArticles(query, filter, userId);
+        public List<NewsArticle> SearchNewsArticlesbyStaff(string? query, string? filter, int? userId) => _dao.SearchNewsArticlesbyStaff(query, filter, userId);
+        public List<NewsArticle> SearchNewsArticlesbyAdmin(string? query, string? filter, int? userId) => _dao.SearchNewsArticlesbyAdmin(query, filter, userId);
     }
 }

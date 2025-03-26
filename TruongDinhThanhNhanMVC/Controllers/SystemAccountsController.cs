@@ -9,6 +9,9 @@ using BusinessObjects;
 using Repositories;
 using AspNetCoreGeneratedDocument;
 using System.Globalization;
+using Microsoft.Data.SqlClient;
+using X.PagedList;
+using X.PagedList.Extensions;
 
 namespace TruongDinhThanhNhanMVC.Controllers
 {
@@ -17,14 +20,15 @@ namespace TruongDinhThanhNhanMVC.Controllers
         private readonly FunewsManagementContext _context;
         private readonly IAccountRepository _account;
         private readonly IConfiguration _configuration;
-        public SystemAccountsController(IConfiguration configuration, IAccountRepository account)
+        public SystemAccountsController(IConfiguration configuration, IAccountRepository account,FunewsManagementContext context)
         {
             _configuration = configuration;
             _account = account;
+            _context = context;
         }
 
         // GET: SystemAccounts
-        public async Task<IActionResult> Index(string? search,string? sortBy)
+        public async Task<IActionResult> Index(string search, string sortBy, string sortOrder,int? page)
         {
             ViewData["Username"] = HttpContext.Session.GetString("Username");
             var userId = HttpContext.Session.GetString("UserId");
@@ -34,15 +38,25 @@ namespace TruongDinhThanhNhanMVC.Controllers
             {
                 return RedirectToAction("Login", "Login");
             }
-            if (_account.SearchAccount(search) != null)
+            var accounts = _context.SystemAccounts.AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
             {
-                return View( _account.SearchAccount(search));
+                accounts = accounts.Where(a => a.AccountName.Contains(search) || a.AccountEmail.Contains(search));
             }
-            if (!string.IsNullOrEmpty(sortBy))
+            sortOrder = sortOrder == "desc" ? "desc" : "asc"; // Đảm bảo giá trị hợp lệ
+            accounts = sortBy switch
             {
-                return View(_account.SortAccounts(sortBy)); ;
-            }
-            return View(_account.GetAllAccounts());
+                "name" => sortOrder == "asc" ? accounts.OrderBy(a => a.AccountName) : accounts.OrderByDescending(a => a.AccountName),
+                "email" => sortOrder == "asc" ? accounts.OrderBy(a => a.AccountEmail) : accounts.OrderByDescending(a => a.AccountEmail),
+                "role" => sortOrder == "asc" ? accounts.OrderBy(a => a.AccountRole) : accounts.OrderByDescending(a => a.AccountRole),
+                _ => accounts
+            };
+            int pageSize = 5;
+            int pageNumber = page ?? 1;
+            var pagedAccounts = accounts.ToPagedList(pageNumber, pageSize);
+
+            return View(pagedAccounts);
 
         }
 
@@ -169,5 +183,30 @@ namespace TruongDinhThanhNhanMVC.Controllers
         {
             return _context.SystemAccounts.Any(e => e.AccountId == id);
         }
+        public async Task<IActionResult> Statictical(DateTime? startDate, DateTime? endDate)
+        {
+            using (_context) // Thay YourDbContext bằng DbContext của bạn
+            {
+                var query = _context.NewsArticles.AsQueryable();
+
+                if (startDate.HasValue)
+                {
+                    query = query.Where(a => a.CreatedDate >= startDate.Value);
+                }
+
+                if (endDate.HasValue)
+                {
+                    query = query.Where(a => a.CreatedDate <= endDate.Value);
+                }
+
+                var articles = await query.ToListAsync();
+
+                ViewData["StartDate"] = startDate;
+                ViewData["EndDate"] = endDate;
+
+                return View(articles);
+            }
+        }
+
     }
 }
